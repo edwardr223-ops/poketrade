@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Box,
@@ -38,13 +38,73 @@ function money(value) {
   });
 }
 
+function getRouteFromHash() {
+  const rawHash = window.location.hash.replace("#", "").replace("/", "");
+  const parts = rawHash.split("/").filter(Boolean);
+
+  if (parts.length === 0) {
+    return {
+      page: "market",
+      listingId: null
+    };
+  }
+
+  if (parts[0] === "card" && parts[1]) {
+    return {
+      page: "detail",
+      listingId: Number.parseInt(parts[1], 10)
+    };
+  }
+
+  const allowedPages = ["market", "binder", "wants", "messages", "cart", "profile", "sell", "upload"];
+
+  if (allowedPages.includes(parts[0])) {
+    return {
+      page: parts[0],
+      listingId: null
+    };
+  }
+
+  return {
+    page: "market",
+    listingId: null
+  };
+}
+
+function routeToHash(page, listingId = null) {
+  if (page === "detail" && listingId) {
+    return "#/card/" + listingId;
+  }
+
+  return "#/" + page;
+}
+
 export default function App() {
-  const [activePage, setActivePage] = useState("market");
+  const initialRoute = getRouteFromHash();
+  const [activePage, setActivePage] = useState(initialRoute.page);
   const [activeCategory, setActiveCategory] = useState("All Items");
   const [searchText, setSearchText] = useState("");
   const [sortMode, setSortMode] = useState("relevance");
   const [savedIds, setSavedIds] = useState([2, 7]);
-  const [selectedListingId, setSelectedListingId] = useState(null);
+  const [selectedListingId, setSelectedListingId] = useState(initialRoute.listingId);
+
+  useEffect(() => {
+    function handleHashChange() {
+      const nextRoute = getRouteFromHash();
+      setActivePage(nextRoute.page);
+      setSelectedListingId(nextRoute.listingId);
+    }
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    if (!window.location.hash) {
+      window.location.hash = routeToHash("market");
+    }
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
   const [filters, setFilters] = useState({
     itemTypes: ["Singles"],
     conditions: [],
@@ -187,11 +247,13 @@ export default function App() {
   function goToPage(page) {
     setSelectedListingId(null);
     setActivePage(page);
+    window.location.hash = routeToHash(page);
   }
 
   function openListing(id) {
     setSelectedListingId(id);
     setActivePage("detail");
+    window.location.hash = routeToHash("detail", id);
   }
 
   return (

@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+src/*.backup.jsx
+src/*.backup.css
+src/App.before-*.jsx
+src/App.before-*.css

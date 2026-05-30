@@ -234,14 +234,6 @@ export default function App() {
   const [sortMode, setSortMode] = useState("relevance");
   const [savedIds, setSavedIds] = useState([2, 7]);
   const [selectedListingId, setSelectedListingId] = useState(null);
-  const [filters, setFilters] = useState({
-    itemTypes: ["Singles"],
-    conditions: [],
-    languages: ["English"],
-    shipping: ["Accepts trades"],
-    priceMin: "",
-    priceMax: ""
-  });
 
   const selectedListing = initialListings.find((item) => item.id === selectedListingId);
 
@@ -250,43 +242,6 @@ export default function App() {
 
     if (activeCategory !== "All Items") {
       items = items.filter((item) => item.category === activeCategory);
-    }
-
-    if (filters.itemTypes.length > 0) {
-      items = items.filter((item) => filters.itemTypes.includes(item.category));
-    }
-
-    if (filters.conditions.length > 0) {
-      items = items.filter((item) => filters.conditions.includes(item.condition));
-    }
-
-    if (filters.languages.length > 0) {
-      items = items.filter((item) => filters.languages.includes(item.language));
-    }
-
-    if (filters.shipping.length > 0) {
-      items = items.filter((item) => {
-        const wantsFreeShipping = filters.shipping.includes("Free shipping");
-        const wantsLocalPickup = filters.shipping.includes("Local pickup");
-        const wantsTrades = filters.shipping.includes("Accepts trades");
-
-        return (
-          (wantsFreeShipping && item.badge === "FREE shipping") ||
-          (wantsLocalPickup && item.badge === "Local pickup") ||
-          (wantsTrades && item.tradeAccepted)
-        );
-      });
-    }
-
-    const minPrice = Number.parseFloat(filters.priceMin);
-    const maxPrice = Number.parseFloat(filters.priceMax);
-
-    if (!Number.isNaN(minPrice)) {
-      items = items.filter((item) => item.priceValue >= minPrice);
-    }
-
-    if (!Number.isNaN(maxPrice)) {
-      items = items.filter((item) => item.priceValue <= maxPrice);
     }
 
     const query = searchText.trim().toLowerCase();
@@ -315,7 +270,7 @@ export default function App() {
     }
 
     return items;
-  }, [activeCategory, searchText, sortMode, filters]);
+  }, [activeCategory, searchText, sortMode]);
 
   const savedListings = initialListings.filter((item) => savedIds.includes(item.id));
   const binderValue = initialListings.reduce((total, item) => total + item.priceValue, 0);
@@ -327,49 +282,6 @@ export default function App() {
       }
 
       return [...current, id];
-    });
-  }
-
-  function toggleFilter(group, value) {
-    setFilters((current) => {
-      const currentValues = current[group];
-
-      if (currentValues.includes(value)) {
-        return {
-          ...current,
-          [group]: currentValues.filter((item) => item !== value)
-        };
-      }
-
-      return {
-        ...current,
-        [group]: [...currentValues, value]
-      };
-    });
-  }
-
-  function updatePriceFilter(field, value) {
-    setFilters((current) => ({
-      ...current,
-      [field]: value
-    }));
-  }
-
-  function removeFilter(group, value) {
-    setFilters((current) => ({
-      ...current,
-      [group]: current[group].filter((item) => item !== value)
-    }));
-  }
-
-  function clearFilters() {
-    setFilters({
-      itemTypes: [],
-      conditions: [],
-      languages: [],
-      shipping: [],
-      priceMin: "",
-      priceMax: ""
     });
   }
 
@@ -407,12 +319,6 @@ export default function App() {
             openListing={openListing}
             sortMode={sortMode}
             setSortMode={setSortMode}
-            filters={filters}
-            toggleFilter={toggleFilter}
-            updatePriceFilter={updatePriceFilter}
-            removeFilter={removeFilter}
-            clearFilters={clearFilters}
-            setActivePage={goToPage}
           />
         )}
 
@@ -535,31 +441,13 @@ function CategoryNav({ activeCategory, setActiveCategory, setActivePage }) {
   );
 }
 
-function MarketPage({
-  listings,
-  savedIds,
-  toggleSaved,
-  openListing,
-  sortMode,
-  setSortMode,
-  filters,
-  toggleFilter,
-  updatePriceFilter,
-  removeFilter,
-  clearFilters,
-  setActivePage
-}) {
+function MarketPage({ listings, savedIds, toggleSaved, openListing, sortMode, setSortMode }) {
   return (
     <>
-      <PromoPanel setActivePage={setActivePage} />
+      <PromoPanel />
 
       <div className="content-layout">
-        <Filters
-          filters={filters}
-          toggleFilter={toggleFilter}
-          updatePriceFilter={updatePriceFilter}
-          clearFilters={clearFilters}
-        />
+        <Filters />
 
         <section className="marketplace-section">
           <MarketplaceToolbar
@@ -568,7 +456,13 @@ function MarketPage({
             setSortMode={setSortMode}
           />
 
-          <ActiveFilters filters={filters} removeFilter={removeFilter} clearFilters={clearFilters} />
+          <div className="active-filter-row">
+            <span>Active filters:</span>
+            <button type="button">Singles <X size={14} /></button>
+            <button type="button">English <X size={14} /></button>
+            <button type="button">Near Mint <X size={14} /></button>
+            <button type="button">Accepts trades <X size={14} /></button>
+          </div>
 
           <ListingGrid
             listings={listings}
@@ -582,7 +476,7 @@ function MarketPage({
   );
 }
 
-function PromoPanel({ setActivePage }) {
+function PromoPanel() {
   return (
     <section className="promo-panel">
       <div className="promo-content">
@@ -594,10 +488,10 @@ function PromoPanel({ setActivePage }) {
       </div>
 
       <div className="promo-actions">
-        <button type="button" className="primary-promo-button" onClick={() => setActivePage("sell")}>
+        <button type="button" className="primary-promo-button" onClick={() => document.dispatchEvent(new CustomEvent("poke-page", { detail: "sell" }))}>
           Start Selling
         </button>
-        <button type="button" className="secondary-promo-button" onClick={() => setActivePage("upload")}>
+        <button type="button" className="secondary-promo-button" onClick={() => document.dispatchEvent(new CustomEvent("poke-page", { detail: "upload" }))}>
           Upload Binder
         </button>
       </div>
@@ -605,46 +499,21 @@ function PromoPanel({ setActivePage }) {
   );
 }
 
-function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
+function Filters() {
   return (
     <aside className="filters-card">
       <div className="filters-title-row">
         <h2>Filters</h2>
-        <button type="button" onClick={clearFilters}>Clear all</button>
+        <button type="button">Clear all</button>
       </div>
 
       <section className="filter-section">
         <h3>Item Type</h3>
-        <CheckboxRow
-          label="Singles"
-          count={12345}
-          checked={filters.itemTypes.includes("Singles")}
-          onChange={() => toggleFilter("itemTypes", "Singles")}
-        />
-        <CheckboxRow
-          label="Sealed"
-          count={2154}
-          checked={filters.itemTypes.includes("Sealed")}
-          onChange={() => toggleFilter("itemTypes", "Sealed")}
-        />
-        <CheckboxRow
-          label="Graded Cards"
-          count={3247}
-          checked={filters.itemTypes.includes("Graded Cards")}
-          onChange={() => toggleFilter("itemTypes", "Graded Cards")}
-        />
-        <CheckboxRow
-          label="Accessories"
-          count={1210}
-          checked={filters.itemTypes.includes("Accessories")}
-          onChange={() => toggleFilter("itemTypes", "Accessories")}
-        />
-        <CheckboxRow
-          label="Other"
-          count={569}
-          checked={filters.itemTypes.includes("Other")}
-          onChange={() => toggleFilter("itemTypes", "Other")}
-        />
+        <CheckboxRow label="Singles" count={12345} checked />
+        <CheckboxRow label="Sealed" count={2154} />
+        <CheckboxRow label="Graded Cards" count={3247} />
+        <CheckboxRow label="Accessories" count={1210} />
+        <CheckboxRow label="Other" count={569} />
       </section>
 
       <section className="filter-section">
@@ -666,8 +535,6 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
             key={condition}
             label={condition}
             count={[8642, 2112, 1125, 469, 125][index]}
-            checked={filters.conditions.includes(condition)}
-            onChange={() => toggleFilter("conditions", condition)}
           />
         ))}
       </section>
@@ -675,54 +542,22 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
       <section className="filter-section">
         <h3>Price</h3>
         <div className="price-row">
-          <input
-            type="text"
-            value={filters.priceMin}
-            onChange={(event) => updatePriceFilter("priceMin", event.target.value)}
-            placeholder="$ Min"
-            aria-label="Minimum price"
-          />
-          <input
-            type="text"
-            value={filters.priceMax}
-            onChange={(event) => updatePriceFilter("priceMax", event.target.value)}
-            placeholder="$ Max"
-            aria-label="Maximum price"
-          />
+          <input type="text" placeholder="$ Min" aria-label="Minimum price" />
+          <input type="text" placeholder="$ Max" aria-label="Maximum price" />
         </div>
       </section>
 
       <section className="filter-section">
         <h3>Language</h3>
-        <CheckboxRow
-          label="English"
-          checked={filters.languages.includes("English")}
-          onChange={() => toggleFilter("languages", "English")}
-        />
-        <CheckboxRow
-          label="Japanese"
-          checked={filters.languages.includes("Japanese")}
-          onChange={() => toggleFilter("languages", "Japanese")}
-        />
+        <CheckboxRow label="English" checked />
+        <CheckboxRow label="Japanese" />
       </section>
 
       <section className="filter-section">
         <h3>Shipping</h3>
-        <CheckboxRow
-          label="Free shipping"
-          checked={filters.shipping.includes("Free shipping")}
-          onChange={() => toggleFilter("shipping", "Free shipping")}
-        />
-        <CheckboxRow
-          label="Local pickup"
-          checked={filters.shipping.includes("Local pickup")}
-          onChange={() => toggleFilter("shipping", "Local pickup")}
-        />
-        <CheckboxRow
-          label="Accepts trades"
-          checked={filters.shipping.includes("Accepts trades")}
-          onChange={() => toggleFilter("shipping", "Accepts trades")}
-        />
+        <CheckboxRow label="Free shipping" />
+        <CheckboxRow label="Local pickup" />
+        <CheckboxRow label="Accepts trades" />
       </section>
 
       <button type="button" className="apply-button">
@@ -732,11 +567,11 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
   );
 }
 
-function CheckboxRow({ label, count, checked = false, onChange }) {
+function CheckboxRow({ label, count, checked = false }) {
   return (
     <label className="checkbox-row">
       <span>
-        <input type="checkbox" checked={checked} onChange={onChange} />
+        <input type="checkbox" defaultChecked={checked} />
         <span>{label}</span>
       </span>
 
@@ -785,62 +620,6 @@ function MarketplaceToolbar({ resultCount, sortMode, setSortMode }) {
   );
 }
 
-function ActiveFilters({ filters, removeFilter, clearFilters }) {
-  const filterGroups = [
-    { key: "itemTypes", values: filters.itemTypes },
-    { key: "conditions", values: filters.conditions },
-    { key: "languages", values: filters.languages },
-    { key: "shipping", values: filters.shipping }
-  ];
-
-  const priceFilters = [];
-
-  if (filters.priceMin.trim().length > 0) {
-    priceFilters.push({ label: "Min $" + filters.priceMin, field: "priceMin" });
-  }
-
-  if (filters.priceMax.trim().length > 0) {
-    priceFilters.push({ label: "Max $" + filters.priceMax, field: "priceMax" });
-  }
-
-  const hasFilters =
-    filterGroups.some((group) => group.values.length > 0) ||
-    priceFilters.length > 0;
-
-  if (!hasFilters) {
-    return (
-      <div className="active-filter-row">
-        <span>No active filters</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="active-filter-row">
-      <span>Active filters:</span>
-
-      {filterGroups.map((group) =>
-        group.values.map((value) => (
-          <button type="button" key={group.key + value} onClick={() => removeFilter(group.key, value)}>
-            {value}
-            <X size={14} />
-          </button>
-        ))
-      )}
-
-      {priceFilters.map((filter) => (
-        <button type="button" key={filter.field} onClick={clearFilters}>
-          {filter.label}
-          <X size={14} />
-        </button>
-      ))}
-
-      <button type="button" className="clear-chip" onClick={clearFilters}>
-        Clear all
-      </button>
-    </div>
-  );
-}
 function ListingGrid({ listings, savedIds, toggleSaved, openListing }) {
   if (listings.length === 0) {
     return (

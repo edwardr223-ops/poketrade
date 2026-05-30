@@ -29,7 +29,25 @@ import {
 import "./App.css";
 import { initialListings } from "./data/listings.js";
 import { messages } from "./data/messages.js";
-import { categories, conditions, setOptions, itemTypeOptions, conditionCounts, languageOptions, shippingOptions } from "./data/filters.js";
+
+const categories = [
+  "All Items",
+  "Singles",
+  "Sealed",
+  "Graded Cards",
+  "Accessories",
+  "Plush & Figures",
+  "TCG Supplies",
+  "Shop by Set"
+];
+
+const conditions = [
+  "Near Mint",
+  "Lightly Played",
+  "Moderately Played",
+  "Heavily Played",
+  "Damaged"
+];
 
 function money(value) {
   return value.toLocaleString("en-US", {
@@ -426,24 +444,47 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
 
       <section className="filter-section">
         <h3>Item Type</h3>
-        {itemTypeOptions.map((itemType) => (
-          <CheckboxRow
-            key={itemType.label}
-            label={itemType.label}
-            count={itemType.count}
-            checked={filters.itemTypes.includes(itemType.label)}
-            onChange={() => toggleFilter("itemTypes", itemType.label)}
-          />
-        ))}
+        <CheckboxRow
+          label="Singles"
+          count={12345}
+          checked={filters.itemTypes.includes("Singles")}
+          onChange={() => toggleFilter("itemTypes", "Singles")}
+        />
+        <CheckboxRow
+          label="Sealed"
+          count={2154}
+          checked={filters.itemTypes.includes("Sealed")}
+          onChange={() => toggleFilter("itemTypes", "Sealed")}
+        />
+        <CheckboxRow
+          label="Graded Cards"
+          count={3247}
+          checked={filters.itemTypes.includes("Graded Cards")}
+          onChange={() => toggleFilter("itemTypes", "Graded Cards")}
+        />
+        <CheckboxRow
+          label="Accessories"
+          count={1210}
+          checked={filters.itemTypes.includes("Accessories")}
+          onChange={() => toggleFilter("itemTypes", "Accessories")}
+        />
+        <CheckboxRow
+          label="Other"
+          count={569}
+          checked={filters.itemTypes.includes("Other")}
+          onChange={() => toggleFilter("itemTypes", "Other")}
+        />
       </section>
 
       <section className="filter-section">
         <h3>Set</h3>
         <select aria-label="Select set">
           <option>Select a set</option>
-          {setOptions.map((setName) => (
-            <option key={setName}>{setName}</option>
-          ))}
+          <option>Scarlet & Violet</option>
+          <option>Obsidian Flames</option>
+          <option>151</option>
+          <option>Crown Zenith</option>
+          <option>Evolving Skies</option>
         </select>
       </section>
 
@@ -453,7 +494,7 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
           <CheckboxRow
             key={condition}
             label={condition}
-            count={conditionCounts[index]}
+            count={[8642, 2112, 1125, 469, 125][index]}
             checked={filters.conditions.includes(condition)}
             onChange={() => toggleFilter("conditions", condition)}
           />
@@ -482,26 +523,35 @@ function Filters({ filters, toggleFilter, updatePriceFilter, clearFilters }) {
 
       <section className="filter-section">
         <h3>Language</h3>
-        {languageOptions.map((language) => (
-          <CheckboxRow
-            key={language}
-            label={language}
-            checked={filters.languages.includes(language)}
-            onChange={() => toggleFilter("languages", language)}
-          />
-        ))}
+        <CheckboxRow
+          label="English"
+          checked={filters.languages.includes("English")}
+          onChange={() => toggleFilter("languages", "English")}
+        />
+        <CheckboxRow
+          label="Japanese"
+          checked={filters.languages.includes("Japanese")}
+          onChange={() => toggleFilter("languages", "Japanese")}
+        />
       </section>
 
       <section className="filter-section">
         <h3>Shipping</h3>
-        {shippingOptions.map((shippingOption) => (
-          <CheckboxRow
-            key={shippingOption}
-            label={shippingOption}
-            checked={filters.shipping.includes(shippingOption)}
-            onChange={() => toggleFilter("shipping", shippingOption)}
-          />
-        ))}
+        <CheckboxRow
+          label="Free shipping"
+          checked={filters.shipping.includes("Free shipping")}
+          onChange={() => toggleFilter("shipping", "Free shipping")}
+        />
+        <CheckboxRow
+          label="Local pickup"
+          checked={filters.shipping.includes("Local pickup")}
+          onChange={() => toggleFilter("shipping", "Local pickup")}
+        />
+        <CheckboxRow
+          label="Accepts trades"
+          checked={filters.shipping.includes("Accepts trades")}
+          onChange={() => toggleFilter("shipping", "Accepts trades")}
+        />
       </section>
 
       <button type="button" className="apply-button">

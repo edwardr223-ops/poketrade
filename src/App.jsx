@@ -380,7 +380,7 @@ function Header({ activePage, setActivePage, searchText, setSearchText }) {
 
         <button type="button" className="profile-button" onClick={() => setActivePage("profile")}>
           <div className="avatar">P</div>
-          <span>TrainerJake</span>
+          <span>Audrey</span>
           <ChevronDown size={18} />
         </button>
       </nav>
@@ -883,14 +883,14 @@ function ProfilePage() {
     <section className="standard-page">
       <PageHero
         eyebrow="Profile"
-        title="TrainerJake"
+        title="Audrey"
         description="Trusted collector profile with trade history, badges, response rate, and public binder."
       />
 
       <div className="profile-grid">
         <div className="profile-card large">
           <div className="profile-avatar">P</div>
-          <h3>TrainerJake</h3>
+          <h3>Audrey</h3>
           <p>Modern singles, alt arts, and set completion collector.</p>
           <div className="badge-row">
             <span>47 completed trades</span>
